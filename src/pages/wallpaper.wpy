@@ -1,0 +1,260 @@
+<style lang="less">
+@import '../components/styles/index.wxss';
+
+.hide{
+  display: none;
+}
+</style>
+<template>
+<view class="page">
+        <wux-search-bar clear
+        bind:confirm="searchworld"
+        bind:blur="searchworld"
+        />
+
+ <view class="page__bd page__bd_spacing">
+        <view class="sub-title"  >热门搜索</view>
+         <repeat for="{{tagjson}}" key="index" index="index" item="item">
+
+        <wux-tag color="#42B983"  @tap="searchtag"
+        >{{item}} </wux-tag>
+
+</repeat>
+    </view>
+
+ <view class="page__bd page__bd_spacing">
+        <view class="sub-title"  >分类搜索</view>
+         <repeat for="{{categoriesjson}}" key="index" index="index" item="item">
+
+        <wux-tag color="#42B983"  @tap="searchtag"
+        >{{item.name}} </wux-tag>
+
+</repeat>
+    </view>
+
+<wux-row >
+              <wux-col span="5">
+
+  <wux-select id="wux-select1" />
+            <wux-cell title="显示" extra="{{ count }}张" @tap="onClick1"></wux-cell>
+</wux-col>
+            <wux-col span="4">
+
+<text>{{imgtotal}}</text>
+
+  </wux-col>
+  <wux-col span="3">
+<wux-button block type="positive" @tap="nextimg">下一页</wux-button>
+  </wux-col>
+</wux-row>
+<view>
+
+  <wux-gallery id="wux-gallery" />
+
+   <block wx:for-items="{{ imgjson }}" wx:key="{{ index }}">
+                                    <view class="weui-uploader__file" @tap="previewImage" data-current="{{ index }}">
+                                        <image class="wux-text--center" src="{{ item.url }}"  />
+                                    </view>
+                                </block>
+</view>
+
+
+
+  <text class="wux-text--center">壁纸源来自360wallpaper----http://wallpaper.apc.360.cn/ </text>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import {getwallpapertag,
+  getallwallpapercategories,
+  clickcopy,
+  getPoetry,
+} from '../api/api';
+
+import {
+$wuxGallery,
+$wuxSelect,
+
+} from '../components/index';
+
+export default class wallpaper extends wepy.page{
+  config={
+      navigationBarTitleText: '壁纸搜索',
+      // component:true,
+      usingComponents:{
+
+
+
+                "wux-cell": "/components/cell/index",
+                // "wux-popup": "/components/popup/index",
+                "wux-tag": "/components/tag/index",
+                // "wux-result": "/components/result/index",
+                "wux-gallery": "/components/gallery/index",
+                "wux-search-bar": "/components/search-bar/index",
+                // "wux-cell-group": "/components/cell-group/index",
+                "wux-col": "/components/col/index",
+                "wux-row": "/components/row/index",
+                // "wux-qrcode": "/components/qrcode/index",
+                "wux-input": "/components/input/index",
+                "wux-select": "/components/select/index",
+                "wux-button": "/components/button/index",
+
+
+
+
+
+  }
+}
+customData = {
+
+}
+
+    customFunction ()　{
+
+    }
+
+    onLoad () {
+
+ this.getwallpapertag1()
+
+
+    }
+
+
+
+
+
+    data = {
+       tagcolor:{},
+       tagjson:{},
+      categoriesjson:{},
+      searchbaseurl:'http://wallpaper.apc.360.cn/index.php?c=WallPaper&a=search',
+      urlstart:'&start=',
+      urlcount:'&count=',
+      kw:'&kw=',
+      baseurl:'http://wallpaper.apc.360.cn/index.php?c=WallPaper&a=search&count=99&kw=开心&start=0',
+      imgjson:{},
+      imgtotal:'点击图片保存',
+      search:{},
+      count:'20',
+      start:'0',
+    };
+
+    components = {};
+
+    mixins = [];
+
+    computed = {};
+
+    watch = {};
+
+    methods = {
+      nextimg(){
+        this.start+=this.count;
+        this.$apply();
+          this.searchimg();
+      },
+       onClick1() {
+        $wuxSelect('#wux-select1').open({
+            value: this.count,
+            options: [
+                5,10,15,20,30,40
+            ],
+            onConfirm: (value, index, options) => {
+                console.log('onConfirm', value, index, options)
+                if (index !== -1) {
+                  this.count=options[index];
+                  this.$apply();
+                  this.searchimg();
+                }
+            },
+        })
+    },
+searchworld(num,evt){
+  this.search=num.detail.value;
+  this.start=0;
+  this.$apply();
+  this.searchimg();
+},
+searchtag(num,evt){
+  console.log(num);
+  this.search=num._relatedInfo.anchorTargetText;
+  this.start=0;
+  this.$apply();
+  this.searchimg();
+},
+    showGallery2(e) {
+        const { current } = e.currentTarget.dataset
+        const  urls  = this.imgjson;
+
+        $wuxGallery().show({
+            current,
+            urls: urls.map((n) => ({ image: n.url, remark: n.url })),
+            showDelete: false,
+            indicatorDots: true,
+            indicatorColor: '#fff',
+            indicatorActiveColor: '#04BE02',
+        })
+    },
+    previewImage(e) {
+        const current  = e.currentTarget.dataset.current;
+        const  urls  = this.imgjson;
+          console.log(current)
+          console.log(this.imgjson[current].url)
+        wx.previewImage({
+           urls:[this.imgjson[current].url]
+        })
+    },
+
+
+
+    };
+
+    events = {};
+
+    onShow()
+    {
+
+
+
+    };
+    getwallpapertag1(){
+      getwallpapertag().then(res=>{
+        this.tagjson=res.data.data;
+        this.$apply();
+        // console.log(res.data.data);
+        console.log(this.tagjson);
+      });
+      getallwallpapercategories().then(res=>{
+        this.categoriesjson=res.data.data;
+        this.$apply();
+        console.log(this.categoriesjson);
+      });
+
+
+
+
+
+    };
+      searchimg(){
+const url=this.searchbaseurl+this.urlcount+this.count+this.urlstart+this.start+this.kw+this.search;
+       getPoetry(url).then(
+      res=>{
+        this.imgjson=res.data.data;
+        this.imgtotal='共'+res.data.total+'张';
+        this.$apply();
+        console.log(this.imgjson);
+      }
+      );
+
+    }
+
+
+
+
+}
+
+</script>
+
+
